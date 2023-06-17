@@ -1,5 +1,6 @@
 //AXIOS GLOBALS
-axios.defaults.headers.common['X-Auth-Token'] = 'someToken'
+axios.defaults.headers.common['X-Auth-Token'] = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+ 
 
 
 // GET REQUEST
@@ -12,7 +13,8 @@ function getTodos() {
 //   }).then(res => showOutput(res))
 //   .catch(err => console.log(err))
   axios.get('https://jsonplaceholder.typicode.com/todos',{
-    params : {_limit:5}
+    params : {_limit:5},
+    timeout:5000
   })
   .then(res => showOutput(res))
   .catch(err => console.log(err));
@@ -91,12 +93,44 @@ function transformResponse() {
 
 // ERROR HANDLING
 function errorHandling() {
-  console.log('Error Handling');
+  axios.get('https://jsonplaceholder.typicode.com/todos',{
+    params : {_limit:5},
+    ValidityState: function(status){
+      return status<500
+    }
+  })
+  .then(res => showOutput(res))
+  .catch(err => {
+    if(err.response){
+      console.log(err.response.data);
+      console.log(err.response.status);
+      console.log(err.response.headers);
+
+      if(err.response.status === 404){
+        alert('ERROR:PAGE NOT FOUND');
+      }
+    else if(err.request){
+      console.log(err.request);
+    }else{
+      console.log(err.message);
+    }
+    }
+  });
 }
 
 // CANCEL TOKEN
 function cancelToken() {
-  console.log('Cancel Token');
+  const source = axios.CancelToken.source();
+  axios.get('https://jsonplaceholder.typicode.com/todos',{
+    cancelToken : source.token
+  })
+  .then(res => showOutput(res))
+  .catch(thrown => {
+    console.log('Request canceled',thrown.message)
+  });
+  if(true){
+    source.cancel('Request canceled');
+  }
 }
 
 // INTERCEPTING REQUESTS & RESPONSES
@@ -109,6 +143,11 @@ axios.interceptors.request.use(config => {
   return Promise.reject(error)
 })
 // AXIOS INSTANCES
+
+const axiosInstances = axios.create({
+  baseURL:'https://jsonplaceholder.typicode.com'
+})
+axiosInstances.get('/comments').then(res =>showOutput(res));
 
 // Show output in browser
 function showOutput(res) {
